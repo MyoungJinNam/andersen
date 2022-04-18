@@ -164,10 +164,11 @@ void Andersen::collectConstraintsForInstruction(const Instruction *inst) {
   case Instruction::Call:
   case Instruction::Invoke: {
     //ImmutableCallSite cs(inst);
-    CallBase cs(inst);
+    Instruction * cloned= inst->clone();
+    CallBase * cs = cast<CallBase>(cloned);
     assert(cs && "Something wrong with callsite?");
 
-    addConstraintForCall(cs);
+    addConstraintForCall(*cs);
 
     break;
   }
@@ -349,7 +350,7 @@ void Andersen::collectConstraintsForInstruction(const Instruction *inst) {
 // There are two types of constraints to add for a function call:
 // - ValueNode(callsite) = ReturnNode(call target)
 // - ValueNode(formal arg) = ValueNode(actual arg)
-void Andersen::addConstraintForCall(CallBase cs) {
+void Andersen::addConstraintForCall(CallBase & cs) {
   if (const Function *f = cs.getCalledFunction()) // Direct call
   {
     if (f->isDeclaration() || f->isIntrinsic()) // External library call
@@ -361,7 +362,7 @@ void Andersen::addConstraintForCall(CallBase cs) {
       {
         errs() << "Unresolved ext function: " << f->getName() << "\n";
         if (cs.getType()->isPointerTy()) {
-          NodeIndex retIndex = nodeFactory.getValueNodeFor(cs.getInstruction());
+          NodeIndex retIndex = nodeFactory.getValueNodeFor(&cs);
           assert(retIndex != AndersNodeFactory::InvalidIndex &&
                  "Failed to find ret node!");
           constraints.emplace_back(AndersConstraint::COPY, retIndex,
@@ -383,7 +384,7 @@ void Andersen::addConstraintForCall(CallBase cs) {
     } else // Non-external function call
     {
       if (cs.getType()->isPointerTy()) {
-        NodeIndex retIndex = nodeFactory.getValueNodeFor(cs.getInstruction());
+        NodeIndex retIndex = nodeFactory.getValueNodeFor(&cs);
         assert(retIndex != AndersNodeFactory::InvalidIndex &&
                "Failed to find ret node!");
         // errs() << f->getName() << "\n";
@@ -400,7 +401,7 @@ void Andersen::addConstraintForCall(CallBase cs) {
     // We do the simplest thing here: just assume the returned value can be
     // anything :)
     if (cs.getType()->isPointerTy()) {
-      NodeIndex retIndex = nodeFactory.getValueNodeFor(cs.getInstruction());
+      NodeIndex retIndex = nodeFactory.getValueNodeFor(&cs);
       assert(retIndex != AndersNodeFactory::InvalidIndex &&
              "Failed to find ret node!");
       constraints.emplace_back(AndersConstraint::COPY, retIndex,
@@ -411,7 +412,7 @@ void Andersen::addConstraintForCall(CallBase cs) {
     // any function that takes can take as many variables is a potential
     // candidate
     const Module *M =
-        cs.getInstruction()->getParent()->getParent()->getParent();
+        cs.getParent()->getParent()->getParent();
     for (auto const &f : *M) {
       NodeIndex funPtrIndex = nodeFactory.getValueNodeFor(&f);
       if (funPtrIndex == AndersNodeFactory::InvalidIndex)
@@ -448,7 +449,7 @@ void Andersen::addConstraintForCall(CallBase cs) {
   }
 }
 
-void Andersen::addArgumentConstraintForCall(CallBase cs,
+void Andersen::addArgumentConstraintForCall(CallBase & cs,
                                             const Function *f) {
   Function::const_arg_iterator fItr = f->arg_begin();
   CallBase::op_iterator aItr = cs.op_begin();
