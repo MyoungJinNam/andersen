@@ -41,7 +41,6 @@
 // The return node for a function is always located at getNode(F) +
 // CallReturnPos. The arguments start at getNode(F) + CallArgPos.
 //
-
 #ifndef TCFS_ANDERSEN_H
 #define TCFS_ANDERSEN_H
 
