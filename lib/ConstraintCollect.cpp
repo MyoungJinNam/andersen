@@ -163,7 +163,8 @@ void Andersen::collectConstraintsForInstruction(const Instruction *inst) {
   }
   case Instruction::Call:
   case Instruction::Invoke: {
-    ImmutableCallSite cs(inst);
+    //ImmutableCallSite cs(inst);
+    CallBase cs(inst);
     assert(cs && "Something wrong with callsite?");
 
     addConstraintForCall(cs);
@@ -348,7 +349,7 @@ void Andersen::collectConstraintsForInstruction(const Instruction *inst) {
 // There are two types of constraints to add for a function call:
 // - ValueNode(callsite) = ReturnNode(call target)
 // - ValueNode(formal arg) = ValueNode(actual arg)
-void Andersen::addConstraintForCall(ImmutableCallSite cs) {
+void Andersen::addConstraintForCall(CallBase cs) {
   if (const Function *f = cs.getCalledFunction()) // Direct call
   {
     if (f->isDeclaration() || f->isIntrinsic()) // External library call
@@ -366,8 +367,8 @@ void Andersen::addConstraintForCall(ImmutableCallSite cs) {
           constraints.emplace_back(AndersConstraint::COPY, retIndex,
                                    nodeFactory.getUniversalPtrNode());
         }
-        for (ImmutableCallSite::arg_iterator itr = cs.arg_begin(),
-                                             ite = cs.arg_end();
+        for (CallBase::op_iterator itr = cs.op_begin(),
+                                             ite = cs.op_end();
              itr != ite; ++itr) {
           Value *argVal = *itr;
           if (argVal->getType()->isPointerTy()) {
@@ -427,8 +428,8 @@ void Andersen::addConstraintForCall(ImmutableCallSite cs) {
           continue;
         else {
           // Pollute everything
-          for (ImmutableCallSite::arg_iterator itr = cs.arg_begin(),
-                                               ite = cs.arg_end();
+          for (CallBase::op_iterator itr = cs.op_begin(),
+                                               ite = cs.op_end();
                itr != ite; ++itr) {
             Value *argVal = *itr;
 
@@ -447,10 +448,10 @@ void Andersen::addConstraintForCall(ImmutableCallSite cs) {
   }
 }
 
-void Andersen::addArgumentConstraintForCall(ImmutableCallSite cs,
+void Andersen::addArgumentConstraintForCall(CallBase cs,
                                             const Function *f) {
   Function::const_arg_iterator fItr = f->arg_begin();
-  ImmutableCallSite::arg_iterator aItr = cs.arg_begin();
+  CallBase::op_iterator aItr = cs.op_begin();
   while (fItr != f->arg_end() && aItr != cs.arg_end()) {
     const Argument *formal = &*fItr;
     const Value *actual = *aItr;
