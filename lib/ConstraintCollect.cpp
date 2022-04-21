@@ -361,7 +361,7 @@ void Andersen::addConstraintForCall(const CallBase & cs) {
         return;
       else // Unresolved library call: ruin everything!
       {
-        errs() << "Unresolved ext function: " << f->getName() << "\n";
+        errs() << "Unresolved_ext_function: " << f->getName() << "\n";
         if (cs.getType()->isPointerTy()) {
           NodeIndex retIndex = nodeFactory.getValueNodeFor(&cs);
           assert(retIndex != AndersNodeFactory::InvalidIndex &&
