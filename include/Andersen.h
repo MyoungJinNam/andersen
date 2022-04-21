@@ -55,6 +55,8 @@
 
 #include <vector>
 
+using namespace llvm;
+
 class Andersen {
 private:
   // A factory object that knows how to manage AndersNodes
