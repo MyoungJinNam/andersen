@@ -107,9 +107,9 @@ static bool lookupName(const char *table[], const char *str) {
 // add the constraints and return true. If this is a call to an unknown
 // function, return false.
 bool Andersen::addConstraintForExternalLibrary(CallBase & cs,
-        const Function *f) {
-    assert(f != nullptr && "called function is nullptr!");
-    assert((f->isDeclaration() || f->isIntrinsic()) &&
+        const Function * callee) {
+    assert(callee != nullptr && "called function is nullptr!");
+    assert((callee->isDeclaration() || f->isIntrinsic()) &&
             "Not an external function!");
 
     // These functions don't induce any points-to constraints
