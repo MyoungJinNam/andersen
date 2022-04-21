@@ -79,10 +79,10 @@ private:
   void collectConstraintsForInstruction(const llvm::Instruction *);
   void addGlobalInitializerConstraints(NodeIndex, const llvm::Constant *);
   //void addConstraintForCall(llvm::CallBase cs);
-  void addConstraintForCall(llvm::CallBase & cs);
-  bool addConstraintForExternalLibrary(llvm::CallBase & cs,
+  void addConstraintForCall(const llvm::CallBase & cs);
+  bool addConstraintForExternalLibrary(const llvm::CallBase & cs,
                                        const llvm::Function *f);
-  void addArgumentConstraintForCall(llvm::CallBase & cs,
+  void addArgumentConstraintForCall(const llvm::CallBase & cs,
                                     const llvm::Function *f);
 
   // Helper functions for constraint optimization

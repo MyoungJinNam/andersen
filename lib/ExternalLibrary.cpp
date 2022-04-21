@@ -106,7 +106,7 @@ static bool lookupName(const char *table[], const char *str) {
 // and add constraint correspondingly If this is a call to a "known" function,
 // add the constraints and return true. If this is a call to an unknown
 // function, return false.
-bool Andersen::addConstraintForExternalLibrary(CallBase & cs,
+bool Andersen::addConstraintForExternalLibrary(const CallBase & cs,
                                                const Function *callee) {
   assert(callee != nullptr && "called function is nullptr!");
   assert((callee->isDeclaration() || callee->isIntrinsic()) &&
@@ -126,7 +126,8 @@ bool Andersen::addConstraintForExternalLibrary(CallBase & cs,
       (isReallocLike && !isa<ConstantPointerNull>(cs.getArgOperand(0)))) {
     //const Instruction *inst = cast<Instruction>(cs);
     const Instruction *inst = &cs;
-
+    errs()<<"addConstraintForExternalLibrary/ cs: "<<cs<<"\n";
+    errs()<<"addConstraintForExternalLibrary/inst: "<<*inst<<"\n";
     // Create the obj node
     NodeIndex objIndex = nodeFactory.createObjectNode(inst);
 
