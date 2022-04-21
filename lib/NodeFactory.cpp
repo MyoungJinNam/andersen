@@ -31,7 +31,7 @@ AndersNodeFactory::AndersNodeFactory() {
 }
 
 NodeIndex AndersNodeFactory::createValueNode(const Value *val) {
-  errs() << "<inserting> " << *val << "\n";
+  errs() << "createValueNode:: " << *val << "\n";
   unsigned nextIdx = nodes.size();
   nodes.push_back(AndersNode(AndersNode::VALUE_NODE, nextIdx, val));
   if (val != nullptr) {
@@ -76,11 +76,12 @@ NodeIndex AndersNodeFactory::createVarargNode(const llvm::Function *f) {
 }
 
 NodeIndex AndersNodeFactory::getValueNodeFor(const Value *val) const {
+  
   if (const Constant *c = dyn_cast<Constant>(val))
     if (!isa<GlobalValue>(c))
       return getValueNodeForConstant(c);
 
-  // errs() << "looking up " << *val << "\n";
+  errs() << "getValueNodeFor:: " << *val << "\n";
   auto itr = valueNodeMap.find(val);
   if (itr == valueNodeMap.end())
     return InvalidIndex;
