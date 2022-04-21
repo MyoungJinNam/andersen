@@ -107,49 +107,49 @@ static bool lookupName(const char *table[], const char *str) {
 // add the constraints and return true. If this is a call to an unknown
 // function, return false.
 bool Andersen::addConstraintForExternalLibrary(CallBase & cs,
-                                               const Function *f) {
-  assert(f != nullptr && "called function is nullptr!");
-  assert((f->isDeclaration() || f->isIntrinsic()) &&
-         "Not an external function!");
+        const Function *f) {
+    assert(f != nullptr && "called function is nullptr!");
+    assert((f->isDeclaration() || f->isIntrinsic()) &&
+            "Not an external function!");
 
-  // These functions don't induce any points-to constraints
-  if (lookupName(noopFuncs, f->getName().data()))
-    return true;
+    // These functions don't induce any points-to constraints
+    if (lookupName(noopFuncs, f->getName().data()))
+        return true;
 
-  // Realloc-like library is a little different: if the first argument is
-  // nullptr, then it behaves like retArg0Funcs; otherwise, it behaves like
-  // mallocFuncs
-  bool isReallocLike = lookupName(reallocFuncs, f->getName().data());
+    // Realloc-like library is a little different: if the first argument is
+    // nullptr, then it behaves like retArg0Funcs; otherwise, it behaves like
+    // mallocFuncs
+    bool isReallocLike = lookupName(reallocFuncs, f->getName().data());
 
-  // Library calls that might allocate memory.
-  if (lookupName(mallocFuncs, f->getName().data()) ||
-      (isReallocLike && !isa<ConstantPointerNull>(cs.getArgOperand(0)))) {
-    //const Instruction *inst = cast<Instruction>(cs);
-    const Instruction *inst = &cs;
+    // Library calls that might allocate memory.
+    if (lookupName(mallocFuncs, f->getName().data()) ||
+            (isReallocLike && !isa<ConstantPointerNull>(cs.getArgOperand(0)))) {
+        //const Instruction *inst = cast<Instruction>(cs);
+        const Instruction *inst = &cs;
 
-    // Create the obj node
-    NodeIndex objIndex = nodeFactory.createObjectNode(inst);
+        // Create the obj node
+        NodeIndex objIndex = nodeFactory.createObjectNode(inst);
 
-    // Get the pointer node
-    NodeIndex ptrIndex = nodeFactory.getValueNodeFor(inst);
-    if (ptrIndex == AndersNodeFactory::InvalidIndex) {
-      // Must be something like posix_memalign()
-      if (f->getName() == "posix_memalign") {
-        ptrIndex = nodeFactory.getValueNodeFor(cs.getArgOperand(0));
-        assert(ptrIndex != AndersNodeFactory::InvalidIndex &&
-               "Failed to find arg0 node");
-        constraints.emplace_back(AndersConstraint::STORE, ptrIndex, objIndex);
-      } else {
-        errs() << f->getName() << '\n';
-        assert(false && "unrecognized malloc call");
-      }
-    } else {
-      // Normal malloc-like call
-      constraints.emplace_back(AndersConstraint::ADDR_OF, ptrIndex, objIndex);
+        // Get the pointer node
+        NodeIndex ptrIndex = nodeFactory.getValueNodeFor(inst);
+        if (ptrIndex == AndersNodeFactory::InvalidIndex) {
+            // Must be something like posix_memalign()
+            if (f->getName() == "posix_memalign") {
+                ptrIndex = nodeFactory.getValueNodeFor(cs.getArgOperand(0));
+                assert(ptrIndex != AndersNodeFactory::InvalidIndex &&
+                        "Failed to find arg0 node");
+                constraints.emplace_back(AndersConstraint::STORE, ptrIndex, objIndex);
+            } else {
+                errs() << f->getName() << '\n';
+                assert(false && "unrecognized malloc call");
+            }
+        } else {
+            // Normal malloc-like call
+            constraints.emplace_back(AndersConstraint::ADDR_OF, ptrIndex, objIndex);
+        }
+
+        return true;
     }
-
-    return true;
-  }
 
   if (lookupName(retArg0Funcs, f->getName().data()) ||
       (isReallocLike && isa<ConstantPointerNull>(cs.getArgOperand(0)))) {

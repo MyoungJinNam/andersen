@@ -31,7 +31,7 @@ AndersNodeFactory::AndersNodeFactory() {
 }
 
 NodeIndex AndersNodeFactory::createValueNode(const Value *val) {
-  // errs() << "inserting " << *val << "\n";
+  errs() << "* inserting " << *val << "\n";
   unsigned nextIdx = nodes.size();
   nodes.push_back(AndersNode(AndersNode::VALUE_NODE, nextIdx, val));
   if (val != nullptr) {
@@ -39,7 +39,7 @@ NodeIndex AndersNodeFactory::createValueNode(const Value *val) {
            "Trying to insert two mappings to revValueNodeMap!");
     valueNodeMap[val] = nextIdx;
   }
-
+  errrs()<<"  nextIdx: "<< nextIdx <<"\n";
   return nextIdx;
 }
 
